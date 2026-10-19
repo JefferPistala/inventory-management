@@ -30,10 +30,10 @@ public class TransactionService(
 
         var (items, totalCount) = await transactionRepository.GetPagedAsync(query);
 
-        Dictionary<int, string> productNames = await GetProductNamesAsync(items.Select(t => t.ProductId));
+        Dictionary<int, ProductInfo> products = await GetProductsAsync(items.Select(t => t.ProductId));
 
         return new PagedResult<TransactionResponse>(
-            items.Select(t => t.ToResponse(productNames.GetValueOrDefault(t.ProductId, UnavailableProductName))).ToList(),
+            items.Select(t => ToResponse(t, products.GetValueOrDefault(t.ProductId))).ToList(),
             query.Page,
             query.PageSize,
             totalCount);
@@ -43,7 +43,7 @@ public class TransactionService(
     {
         ValidateDateRange(query);
 
-        // Primero obtengo el nombre y el stock actual del producto (una sola llamada).
+        // Incluye productos eliminados: su historial se conserva y se puede consultar.
         ProductInfo product = await productsClient.GetProductAsync(productId)
             ?? throw new NotFoundException($"El producto {productId} no existe.");
 
@@ -52,19 +52,19 @@ public class TransactionService(
         var (items, totalCount) = await transactionRepository.GetPagedAsync(query);
 
         var page = new PagedResult<TransactionResponse>(
-            items.Select(t => t.ToResponse(product.Name)).ToList(),
+            items.Select(t => t.ToResponse(product.Name, product.IsActive)).ToList(),
             query.Page,
             query.PageSize,
             totalCount);
 
-        return new ProductHistoryResponse(product.Id, product.Name, product.Stock, page);
+        return new ProductHistoryResponse(product.Id, product.Name, product.Stock, product.IsActive, page);
     }
 
     public async Task<TransactionResponse> GetByIdAsync(int id)
     {
         Transaction transaction = await GetExistingTransactionAsync(id);
-        string productName = await GetProductNameAsync(transaction.ProductId);
-        return transaction.ToResponse(productName);
+        Dictionary<int, ProductInfo> products = await GetProductsAsync([transaction.ProductId]);
+        return ToResponse(transaction, products.GetValueOrDefault(transaction.ProductId));
     }
 
     public async Task<TransactionResponse> CreateAsync(CreateTransactionRequest request)
@@ -196,16 +196,15 @@ public class TransactionService(
         await transactionRepository.GetByIdAsync(id)
         ?? throw new NotFoundException($"La transacción {id} no existe.");
 
-    private async Task<string> GetProductNameAsync(int productId)
-    {
-        Dictionary<int, string> names = await GetProductNamesAsync([productId]);
-        return names.GetValueOrDefault(productId, UnavailableProductName);
-    }
+    // Si no tengo los datos del producto (Productos no respondió), muestro
+    // "Producto no disponible" y no la marco como eliminada, porque no lo sé.
+    private static TransactionResponse ToResponse(Transaction transaction, ProductInfo? product) =>
+        transaction.ToResponse(product?.Name ?? UnavailableProductName, product?.IsActive ?? true);
 
-    // Pido los nombres de los productos de la página en paralelo, una vez por
-    // producto distinto (no una por fila). Si Productos no responde, el listado
+    // Pido los productos de la página en paralelo, una vez por producto
+    // distinto (no una por fila). Si Productos no responde, el listado
     // igual se muestra con "Producto no disponible" en vez de fallar entero.
-    private async Task<Dictionary<int, string>> GetProductNamesAsync(IEnumerable<int> productIds)
+    private async Task<Dictionary<int, ProductInfo>> GetProductsAsync(IEnumerable<int> productIds)
     {
         List<int> distinctIds = productIds.Distinct().ToList();
         try
@@ -213,11 +212,11 @@ public class TransactionService(
             ProductInfo?[] products = await Task.WhenAll(distinctIds.Select(productsClient.GetProductAsync));
             return products
                 .Where(p => p is not null)
-                .ToDictionary(p => p!.Id, p => p!.Name);
+                .ToDictionary(p => p!.Id, p => p!);
         }
         catch (ExternalServiceException ex)
         {
-            logger.LogWarning(ex, "No se pudieron obtener los nombres de los productos.");
+            logger.LogWarning(ex, "No se pudieron obtener los datos de los productos.");
             return [];
         }
     }

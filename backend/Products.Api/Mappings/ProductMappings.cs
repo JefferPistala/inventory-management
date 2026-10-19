@@ -18,6 +18,7 @@ public static class ProductMappings
         product.ImageUrl,
         product.Price,
         product.Stock,
+        product.IsActive,
         product.CreatedAt,
         product.UpdatedAt);
 

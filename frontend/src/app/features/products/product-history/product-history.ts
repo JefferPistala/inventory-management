@@ -63,6 +63,7 @@ export class ProductHistory implements OnInit {
 
   protected readonly productName = signal('');
   protected readonly currentStock = signal<number | null>(null);
+    protected readonly isActive = signal(true);
   protected readonly transactions = signal<Transaction[]>([]);
   protected readonly totalCount = signal(0);
   protected readonly pageIndex = signal(0);
@@ -97,6 +98,7 @@ export class ProductHistory implements OnInit {
         }
         this.productName.set(history.productName);
         this.currentStock.set(history.currentStock);
+        this.isActive.set(history.isActive);
         this.transactions.set(history.transactions.items);
         this.totalCount.set(history.transactions.totalCount);
       });

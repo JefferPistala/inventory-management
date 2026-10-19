@@ -27,9 +27,13 @@ public class ProductService(
             totalCount);
     }
 
-    public async Task<ProductResponse> GetByIdAsync(int id)
+    // includeInactive solo sirve para CONSULTAR un producto eliminado (por
+    // ejemplo, para mostrar su nombre en el historial). Editar, eliminar y
+    // ajustar stock siguen sin encontrarlo.
+    public async Task<ProductResponse> GetByIdAsync(int id, bool includeInactive = false)
     {
-        Product product = await GetExistingProductAsync(id);
+        Product product = await productRepository.GetByIdAsync(id, includeInactive)
+            ?? throw new NotFoundException($"El producto {id} no existe.");
         return product.ToResponse();
     }
 

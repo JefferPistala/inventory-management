@@ -55,6 +55,7 @@ public record TransactionResponse(
     TransactionType Type,
     int ProductId,
     string ProductName,
+    bool ProductIsActive,   // false si el producto fue eliminado: la fila queda de solo lectura
     int Quantity,
     decimal UnitPrice,
     decimal TotalPrice,
@@ -68,4 +69,5 @@ public record ProductHistoryResponse(
     int ProductId,
     string ProductName,
     int CurrentStock,
+    bool IsActive,
     PagedResult<TransactionResponse> Transactions);

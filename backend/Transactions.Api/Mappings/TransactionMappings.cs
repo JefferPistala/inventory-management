@@ -7,12 +7,14 @@ namespace Transactions.Api.Mappings;
 // El nombre del producto no está en mi base, por eso lo recibo como parámetro.
 public static class TransactionMappings
 {
-    public static TransactionResponse ToResponse(this Transaction transaction, string productName) => new(
+    public static TransactionResponse ToResponse(
+        this Transaction transaction, string productName, bool productIsActive) => new(
         transaction.Id,
         transaction.TransactionDate,
         transaction.Type,
         transaction.ProductId,
         productName,
+        productIsActive,
         transaction.Quantity,
         transaction.UnitPrice,
         transaction.TotalPrice,

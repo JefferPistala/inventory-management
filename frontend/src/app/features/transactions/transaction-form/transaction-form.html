@@ -22,10 +22,10 @@
   <div class="form-grid">
     <!-- Al editar, el producto se muestra pero no se puede cambiar -->
     @if (isEdit()) {
-      <mat-form-field appearance="outline">
+            <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Producto</mat-label>
         <input matInput [value]="original()?.productName ?? ''" disabled />
-        <mat-hint>El producto de una transacción no se puede cambiar.</mat-hint>
+        <mat-hint>No se puede cambiar al editar.</mat-hint>
       </mat-form-field>
     } @else {
       <mat-form-field appearance="outline">
@@ -70,11 +70,11 @@
       }
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Precio unitario</mat-label>
       <span matTextPrefix>$&nbsp;</span>
       <input matInput type="number" min="0" step="0.01" formControlName="unitPrice" />
-      <mat-hint>Se sugiere el precio actual del producto; puede modificarlo.</mat-hint>
+      <mat-hint>Sugerido: precio actual del producto.</mat-hint>
       @if (form.controls.unitPrice.hasError('required')) {
         <mat-error>El precio unitario es obligatorio.</mat-error>
       } @else if (form.controls.unitPrice.hasError('min')) {

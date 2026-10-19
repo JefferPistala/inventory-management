@@ -11,10 +11,10 @@ public interface IProductRepository
     // Listado con filtros dinámicos y paginación: devuelve la página + el total.
     Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(ProductQueryParameters query);
 
-    // Devuelve null si no existe (o está eliminado). Decidir qué hacer con
-    // ese null es responsabilidad del Service, no del Repository.
-    Task<Product?> GetByIdAsync(int id);
-
+    // Devuelve null si no existe. Por defecto los eliminados (soft delete) no se
+    // encuentran; con includeInactive = true sí, para consultar su historial.
+    // Decidir qué hacer con el null es responsabilidad del Service.
+    Task<Product?> GetByIdAsync(int id, bool includeInactive = false);
     Task<bool> ExistsAsync(int id);
 
     Task AddAsync(Product product);

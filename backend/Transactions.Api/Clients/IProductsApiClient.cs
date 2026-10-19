@@ -5,6 +5,7 @@ namespace Transactions.Api.Clients;
 // cambiar a gRPC o simular el cliente en pruebas sin tocar la lógica de negocio.
 public interface IProductsApiClient
 {
+    // Incluye productos eliminados (IsActive = false).
     // Devuelvo null si el producto no existe (404 de Productos).
     Task<ProductInfo?> GetProductAsync(int productId);
 

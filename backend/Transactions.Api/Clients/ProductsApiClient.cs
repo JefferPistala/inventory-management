@@ -12,8 +12,10 @@ public class ProductsApiClient(HttpClient httpClient) : IProductsApiClient
 {
     public async Task<ProductInfo?> GetProductAsync(int productId)
     {
+        // includeInactive=true: aunque el producto se haya eliminado, necesito su
+        // nombre para mostrar el historial; las transacciones nunca se pierden.
         HttpResponseMessage response = await SendAsync(
-            () => httpClient.GetAsync($"api/products/{productId}"));
+            () => httpClient.GetAsync($"api/products/{productId}?includeInactive=true"));
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return null;

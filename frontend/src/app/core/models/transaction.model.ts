@@ -9,6 +9,7 @@ export interface Transaction {
   type: TransactionType;
   productId: number;
   productName: string;
+  productIsActive: boolean;
   quantity: number;
   unitPrice: number;
   totalPrice: number;
@@ -48,6 +49,7 @@ export interface ProductHistory {
   productId: number;
   productName: string;
   currentStock: number;
+  isActive: boolean;
   transactions: PagedResult<Transaction>;
 }
 

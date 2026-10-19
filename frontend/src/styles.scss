@@ -188,6 +188,12 @@ body {
     background-color: #fff4dc;
     color: #8a5300;
   }
+
+  &.neutral {
+    background-color: var(--mat-sys-surface-container-high);
+    color: var(--mat-sys-on-surface-variant);
+    margin-left: 6px;
+  }
 }
 
 // Formularios

@@ -46,12 +46,18 @@ public class ProductRepository(ProductsDbContext context) : IProductRepository
         return (items, totalCount);
     }
 
-    public Task<Product?> GetByIdAsync(int id) =>
+    public Task<Product?> GetByIdAsync(int id, bool includeInactive = false)
+    {
         // Sin AsNoTracking: el Service puede modificar la entidad devuelta
         // y luego llamar a SaveChangesAsync para guardar (editar / eliminar).
-        context.Products
-            .Include(p => p.Category)
-            .FirstOrDefaultAsync(p => p.Id == id);
+        IQueryable<Product> products = context.Products.Include(p => p.Category);
+
+        // IgnoreQueryFilters salta el filtro global IsActive solo en esta consulta.
+        if (includeInactive)
+            products = products.IgnoreQueryFilters();
+
+        return products.FirstOrDefaultAsync(p => p.Id == id);
+    }
 
     public Task<bool> ExistsAsync(int id) =>
         context.Products.AnyAsync(p => p.Id == id);

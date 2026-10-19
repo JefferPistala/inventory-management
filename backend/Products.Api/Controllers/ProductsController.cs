@@ -25,8 +25,10 @@ public class ProductsController(IProductService productService) : ControllerBase
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ProductResponse>> GetById(int id) =>
-        Ok(await productService.GetByIdAsync(id));
+    // GET /api/products/5?includeInactive=true también devuelve productos
+    // eliminados; lo usa Transactions.Api para mostrar el historial completo.
+    public async Task<ActionResult<ProductResponse>> GetById(int id, [FromQuery] bool includeInactive = false) =>
+        Ok(await productService.GetByIdAsync(id, includeInactive));
 
     // POST /api/products → 201 Created + cabecera Location con la URL del nuevo producto.
     [HttpPost]

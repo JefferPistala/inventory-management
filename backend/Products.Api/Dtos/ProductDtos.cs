@@ -56,6 +56,7 @@ public record ProductResponse(
     string? ImageUrl,
     decimal Price,
     int Stock,
+    bool IsActive,       // false = eliminado (solo llega así con includeInactive)
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
