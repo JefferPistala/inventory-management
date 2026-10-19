@@ -7,7 +7,7 @@ using Transactions.Api.Repositories;
 
 namespace Transactions.Api.Services;
 
-// Lógica de negocio de transacciones. Aquí está lo más delicado de la prueba:
+// Lógica de negocio de transacciones. Aqui esta la parte mas delicada del sistema
 // mantener el stock consistente entre DOS bases de datos de DOS servicios.
 //
 // No existe una transacción SQL que abarque ambas bases, así que uso una

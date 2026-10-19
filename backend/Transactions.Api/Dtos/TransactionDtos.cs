@@ -62,8 +62,8 @@ public record TransactionResponse(
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
-// Historial de un producto: sus datos actuales (nombre y stock, que pide la
-// prueba) más sus transacciones paginadas y filtradas.
+// Historial de un producto: sus datos actuales (nombre y stock)
+//  más sus transacciones paginadas y filtradas.
 public record ProductHistoryResponse(
     int ProductId,
     string ProductName,
