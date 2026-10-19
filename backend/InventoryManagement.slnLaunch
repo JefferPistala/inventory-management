@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "Backend Completo",
+    "Projects": [
+      {
+        "Path": "Products.Api\\Products.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "Transactions.Api\\Transactions.Api.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      }
+    ]
+  }
+]
