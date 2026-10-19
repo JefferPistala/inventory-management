@@ -1,0 +1,73 @@
+<header class="page-header">
+  <div>
+    <h1>Detalle del producto</h1>
+    <p class="page-subtitle">Información registrada del producto.</p>
+  </div>
+  @if (product(); as current) {
+    <div class="header-actions">
+      <a mat-stroked-button [routerLink]="['/products', current.id, 'history']">
+        <mat-icon>history</mat-icon>
+        Historial
+      </a>
+      <a mat-stroked-button routerLink="/transactions/new" [queryParams]="{ productId: current.id }">
+        <mat-icon>add_shopping_cart</mat-icon>
+        Registrar transacción
+      </a>
+      <a mat-flat-button [routerLink]="['/products', current.id, 'edit']">
+        <mat-icon>edit</mat-icon>
+        Editar
+      </a>
+    </div>
+  }
+</header>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (product(); as current) {
+  <section class="panel detail-layout">
+    @if (current.imageUrl && !imageFailed()) {
+      <img class="detail-image" [src]="current.imageUrl" [alt]="current.name" (error)="imageFailed.set(true)" />
+    } @else {
+      <div class="detail-image"></div>
+    }
+
+    <dl>
+      <dt>ID</dt>
+      <dd>{{ current.id }}</dd>
+
+      <dt>Nombre</dt>
+      <dd>{{ current.name }}</dd>
+
+      <dt>Categoría</dt>
+      <dd>{{ current.categoryName }}</dd>
+
+      <dt>Descripción</dt>
+      <dd>{{ current.description || 'Sin descripción' }}</dd>
+
+      <dt>Precio</dt>
+      <dd>{{ current.price | currency }}</dd>
+
+      <dt>Stock</dt>
+      <dd>
+        @if (current.stock === 0) {
+          <span class="badge danger">Sin stock</span>
+        } @else {
+          <span class="badge success">{{ current.stock }} unidades</span>
+        }
+      </dd>
+
+      <dt>Creado</dt>
+      <dd>{{ current.createdAt | apiDate | date: 'dd/MM/yyyy HH:mm' }}</dd>
+
+      <dt>Última modificación</dt>
+      <dd>{{ (current.updatedAt | apiDate | date: 'dd/MM/yyyy HH:mm') || 'Sin modificaciones' }}</dd>
+    </dl>
+  </section>
+}
+
+<a mat-button routerLink="/products">
+  <mat-icon>arrow_back</mat-icon>
+  Volver al listado
+</a>

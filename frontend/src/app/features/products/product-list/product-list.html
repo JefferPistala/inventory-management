@@ -1,0 +1,157 @@
+<header class="page-header">
+  <div>
+    <h1>Productos</h1>
+    <p class="page-subtitle">Administra el catálogo y consulta el stock disponible.</p>
+  </div>
+  <div class="header-actions">
+    <a mat-flat-button routerLink="/products/new">
+      <mat-icon>add</mat-icon>
+      Nuevo producto
+    </a>
+  </div>
+</header>
+
+<!-- Filtros dinámicos: cualquier cambio vuelve a consultar la API -->
+<form class="panel filters" [formGroup]="filtersForm">
+  <mat-form-field appearance="outline">
+    <mat-label>Buscar por nombre</mat-label>
+    <input matInput formControlName="name" placeholder="Ej.: mouse" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Categoría</mat-label>
+    <mat-select formControlName="categoryId">
+      <mat-option [value]="null">Todas</mat-option>
+      @for (category of categories(); track category.id) {
+        <mat-option [value]="category.id">{{ category.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Precio mínimo</mat-label>
+    <input matInput type="number" min="0" formControlName="minPrice" />
+    <span matTextPrefix>$&nbsp;</span>
+    @if (filtersForm.controls.minPrice.hasError('min')) {
+      <mat-error>No puede ser negativo.</mat-error>
+    }
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Precio máximo</mat-label>
+    <input matInput type="number" min="0" formControlName="maxPrice" />
+    <span matTextPrefix>$&nbsp;</span>
+    @if (filtersForm.controls.maxPrice.hasError('min')) {
+      <mat-error>No puede ser negativo.</mat-error>
+    }
+  </mat-form-field>
+
+  <div class="filters-actions">
+    <button mat-stroked-button type="button" (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Limpiar
+    </button>
+  </div>
+</form>
+
+@if (filtersForm.hasError('range')) {
+  <p class="form-error">El precio mínimo no puede ser mayor que el precio máximo.</p>
+}
+
+<!-- Tabla dinámica con paginación del lado del servidor -->
+<div class="table-container">
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  <table mat-table [dataSource]="products()">
+        <ng-container matColumnDef="image">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let product">
+        @if (product.imageUrl && !brokenImages().has(product.id)) {
+          <img class="thumbnail" [src]="product.imageUrl" [alt]="product.name" (error)="onImageError(product.id)" />
+        } @else {
+          <mat-icon class="thumbnail-placeholder">image</mat-icon>
+        }
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Nombre</th>
+      <td mat-cell *matCellDef="let product">
+        <div>{{ product.name }}</div>
+        @if (product.description) {
+          <div class="muted">{{ product.description }}</div>
+        }
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="category">
+      <th mat-header-cell *matHeaderCellDef>Categoría</th>
+      <td mat-cell *matCellDef="let product">{{ product.categoryName }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="price">
+      <th mat-header-cell *matHeaderCellDef class="numeric">Precio</th>
+      <td mat-cell *matCellDef="let product" class="numeric">{{ product.price | currency }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="stock">
+      <th mat-header-cell *matHeaderCellDef class="numeric">Stock</th>
+      <td mat-cell *matCellDef="let product" class="numeric">
+        @if (product.stock === 0) {
+          <span class="badge danger">Sin stock</span>
+        } @else if (product.stock <= 5) {
+          <span class="badge warning">{{ product.stock }}</span>
+        } @else {
+          <span class="badge success">{{ product.stock }}</span>
+        }
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let product" class="actions-cell">
+        <a mat-icon-button [routerLink]="['/products', product.id]" matTooltip="Ver detalle">
+          <mat-icon>visibility</mat-icon>
+        </a>
+        <a mat-icon-button [routerLink]="['/products', product.id, 'edit']" matTooltip="Editar">
+          <mat-icon>edit</mat-icon>
+        </a>
+        <a mat-icon-button [routerLink]="['/products', product.id, 'history']" matTooltip="Historial de transacciones">
+          <mat-icon>history</mat-icon>
+        </a>
+        <a
+          mat-icon-button
+          routerLink="/transactions/new"
+          [queryParams]="{ productId: product.id }"
+          matTooltip="Registrar compra o venta"
+        >
+          <mat-icon>add_shopping_cart</mat-icon>
+        </a>
+        <button mat-icon-button type="button" (click)="deleteProduct(product)" matTooltip="Eliminar">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+    <tr class="mat-row" *matNoDataRow>
+      <td class="no-data" [attr.colspan]="displayedColumns.length">
+        {{ loading() ? 'Cargando productos...' : 'No se encontraron productos con los filtros aplicados.' }}
+      </td>
+    </tr>
+  </table>
+
+  <mat-paginator
+    [length]="totalCount()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[5, 10, 20]"
+    showFirstLastButtons
+    (page)="onPageChange($event)"
+  />
+</div>

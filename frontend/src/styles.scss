@@ -1,0 +1,317 @@
+// Tema de Angular Material (Material 3). Lo generó "ng add @angular/material".
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface-container-low);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}
+
+// ---------------------------------------------------------------
+// Estilos compartidos. Los dejo aquí (y no en cada componente)
+// porque todas las pantallas usan la misma estructura: encabezado,
+// filtros, tabla y formularios.
+// ---------------------------------------------------------------
+
+// Barra superior
+// Material 3 pinta sus componentes con variables (tokens); por eso cambio
+// los colores redefiniendo esas variables y no con background-color.
+.app-toolbar {
+  --mat-toolbar-container-background-color: var(--mat-sys-primary);
+  --mat-toolbar-container-text-color: var(--mat-sys-on-primary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  .app-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: inherit;
+    text-decoration: none;
+    font: var(--mat-sys-title-large);
+  }
+
+  .app-nav a {
+    --mat-button-text-label-text-color: var(--mat-sys-on-primary);
+  }
+
+  .active-link {
+    background-color: rgb(255 255 255 / 18%);
+  }
+}
+
+.spacer {
+  flex: 1;
+}
+
+.app-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+// Encabezado de cada pantalla
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h1 {
+    font: var(--mat-sys-headline-small);
+    margin: 0;
+  }
+
+  .page-subtitle {
+    margin: 4px 0 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+// Tarjeta blanca que envuelve filtros, tablas y formularios
+.panel {
+  background-color: var(--mat-sys-surface);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--mat-sys-level1);
+}
+
+// Filtros dinámicos
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0 12px;
+
+  mat-form-field {
+    flex: 1 1 180px;
+  }
+
+  .filters-actions {
+    display: flex;
+    align-items: center;
+    height: 56px;
+  }
+}
+
+// Tablas
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  background-color: var(--mat-sys-surface);
+  box-shadow: var(--mat-sys-level1);
+
+  table {
+    width: 100%;
+  }
+
+  .actions-cell {
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .no-data {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.numeric {
+  text-align: right;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+  font: var(--mat-sys-body-small);
+}
+
+// Miniatura de producto
+.thumbnail {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+}
+
+.thumbnail-placeholder {
+  color: var(--mat-sys-outline);
+}
+
+// Etiquetas de estado (stock y tipo de transacción)
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font: var(--mat-sys-label-medium);
+  white-space: nowrap;
+
+  &.success {
+    background-color: #e3f4e6;
+    color: #1b5e20;
+  }
+
+  &.danger {
+    background-color: #fde7e7;
+    color: #b3261e;
+  }
+
+  &.warning {
+    background-color: #fff4dc;
+    color: #8a5300;
+  }
+}
+
+// Formularios
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 4px 16px;
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.form-error {
+  color: var(--mat-sys-error);
+  font: var(--mat-sys-body-small);
+  margin: 0 0 8px;
+}
+
+// Mensajes informativos dentro de formularios
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background-color: var(--mat-sys-surface-container);
+
+  &.error {
+    background-color: #fde7e7;
+    color: #b3261e;
+  }
+}
+
+.image-preview {
+  max-width: 180px;
+  max-height: 180px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+// Detalle de producto
+.detail-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
+
+  @media (max-width: 700px) {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-image {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 12px;
+    background-color: var(--mat-sys-surface-container);
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 12px 16px;
+    margin: 0;
+  }
+
+  dt {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+// Resumen del historial (nombre y stock del producto)
+.summary-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  .summary-card {
+    flex: 1 1 200px;
+    background-color: var(--mat-sys-surface);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: var(--mat-sys-level1);
+
+    .label {
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-label-large);
+    }
+
+    .value {
+      font: var(--mat-sys-headline-small);
+      margin-top: 4px;
+    }
+  }
+}
+
+// Botón rojo para confirmar eliminaciones
+.danger-button {
+  --mat-button-filled-container-color: var(--mat-sys-error);
+  --mat-button-filled-label-text-color: var(--mat-sys-on-error);
+}
+
+// Notificaciones de éxito y error (NotificationService)
+.snackbar-success {
+  --mat-snack-bar-container-color: #1b5e20;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #c8e6c9;
+}
+
+.snackbar-error {
+  --mat-snack-bar-container-color: #b3261e;
+  --mat-snack-bar-supporting-text-color: #ffffff;
+  --mat-snack-bar-button-color: #ffdad6;
+}
