@@ -18,16 +18,21 @@ public class TransactionRepository(TransactionsDbContext context) : ITransaction
 
         if (query.Type.HasValue)
             transactions = transactions.Where(t => t.Type == query.Type.Value);
-
+        // Las fechas del filtro llegan como días ("2026-10-19") en la hora local del
+        // servidor, pero en la base guardo UTC. Convierto el inicio de cada día a UTC
+        // antes de comparar; si no, en la noche (Ecuador es UTC-5) una venta de hoy
+        // quedaría registrada como "mañana" y no aparecería en el filtro.
         if (query.From.HasValue)
-            transactions = transactions.Where(t => t.TransactionDate >= query.From.Value.Date);
+        {
+            DateTime startUtc = query.From.Value.Date.ToUniversalTime();
+            transactions = transactions.Where(t => t.TransactionDate >= startUtc);
+        }
 
-        // Tomo "To" como el día completo: todo lo que sea antes del día siguiente.
-        // Si comparara con "<= To", perdería las transacciones de ese día después de las 00:00.
+        // Tomo "To" como el día completo: todo lo anterior al inicio del día siguiente.
         if (query.To.HasValue)
         {
-            DateTime endExclusive = query.To.Value.Date.AddDays(1);
-            transactions = transactions.Where(t => t.TransactionDate < endExclusive);
+            DateTime endExclusiveUtc = query.To.Value.Date.AddDays(1).ToUniversalTime();
+            transactions = transactions.Where(t => t.TransactionDate < endExclusiveUtc);
         }
 
         int totalCount = await transactions.CountAsync();
