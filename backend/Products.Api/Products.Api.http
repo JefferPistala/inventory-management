@@ -1,6 +1,62 @@
-@Products.Api_HostAddress = http://localhost:5256
+### Pruebas manuales de Products.Api desde Visual Studio
+### (clic en "Enviar solicitud" sobre cada bloque, con la API corriendo)
 
-GET {{Products.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@baseUrl = http://localhost:5001
 
-###
+### Listar categorías (para el select del frontend)
+GET {{baseUrl}}/api/categories
+
+### Crear producto → 201 Created
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Mouse inalámbrico",
+  "description": "Mouse óptico 1600 DPI",
+  "categoryId": 1,
+  "imageUrl": "https://example.com/mouse.png",
+  "price": 15.50
+}
+
+### Crear producto inválido → 400 (nombre vacío y precio negativo)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "",
+  "categoryId": 1,
+  "price": -5
+}
+
+### Listado paginado con filtros dinámicos
+GET {{baseUrl}}/api/products?name=mouse&categoryId=1&minPrice=10&page=1&pageSize=10
+
+### Obtener por id → 200 o 404
+GET {{baseUrl}}/api/products/1
+
+### Editar → 200 (el stock no se puede cambiar aquí)
+PUT {{baseUrl}}/api/products/1
+Content-Type: application/json
+
+{
+  "name": "Mouse inalámbrico Pro",
+  "description": "Mouse óptico 3200 DPI",
+  "categoryId": 1,
+  "imageUrl": "https://example.com/mouse-pro.png",
+  "price": 19.99
+}
+
+### Ajustar stock: compra de 20 unidades → 200
+PATCH {{baseUrl}}/api/products/1/stock
+Content-Type: application/json
+
+{ "delta": 20 }
+
+### Ajustar stock: venta mayor al stock → 409
+PATCH {{baseUrl}}/api/products/1/stock
+Content-Type: application/json
+
+{ "delta": -999 }
+
+### Eliminar (soft delete) → 204; luego GET del mismo id → 404
+DELETE {{baseUrl}}/api/products/1

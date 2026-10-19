@@ -1,6 +1,76 @@
-@Transactions.Api_HostAddress = http://localhost:5141
+### Pruebas manuales de Transactions.Api
+### Arranco las DOS APIs (F5 con el perfil de varios proyectos), porque
+### Transactions llama a Products para ajustar el stock.
+### Antes de probar, creo un producto en Products.Api y uso su id aquí.
 
-GET {{Transactions.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@baseUrl = http://localhost:5002
+@productId = 2
 
-###
+### Compra de 20 unidades → 201 y el stock del producto sube 20
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+
+{
+  "productId": {{productId}},
+  "type": "Purchase",
+  "quantity": 20,
+  "unitPrice": 10.00,
+  "detail": "Compra inicial al proveedor"
+}
+
+### Venta de 5 unidades → 201 y el stock baja 5
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+
+{
+  "productId": {{productId}},
+  "type": "Sale",
+  "quantity": 5,
+  "unitPrice": 15.50,
+  "detail": "Venta mostrador"
+}
+
+### Venta mayor al stock → 409 con el mensaje de Productos
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+
+{
+  "productId": {{productId}},
+  "type": "Sale",
+  "quantity": 999,
+  "unitPrice": 15.50
+}
+
+### Datos inválidos → 400 (cantidad 0, precio negativo)
+POST {{baseUrl}}/api/transactions
+Content-Type: application/json
+
+{
+  "productId": {{productId}},
+  "type": "Sale",
+  "quantity": 0,
+  "unitPrice": -1
+}
+
+### Listado paginado con filtros dinámicos
+GET {{baseUrl}}/api/transactions?type=Sale&page=1&pageSize=10
+
+### Historial del producto con nombre y stock actual
+GET {{baseUrl}}/api/transactions/history/{{productId}}?from=2026-10-01&to=2026-12-31
+
+### Obtener una transacción → 200 o 404
+GET {{baseUrl}}/api/transactions/2
+
+### Editar la venta de 5 a 3 → delta +2, el stock sube 2
+PUT {{baseUrl}}/api/transactions/2
+Content-Type: application/json
+
+{
+  "type": "Sale",
+  "quantity": 3,
+  "unitPrice": 15.50,
+  "detail": "Venta corregida"
+}
+
+### Eliminar la venta → 204 y vuelven sus unidades al stock
+DELETE {{baseUrl}}/api/transactions/2
