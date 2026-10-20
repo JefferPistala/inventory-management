@@ -3,13 +3,7 @@ using Transactions.Api.Entities;
 
 namespace Transactions.Api.Dtos;
 
-// =====================================================================
-// DTOs de transacciones. Con estas validaciones, .NET responde 400
-// automáticamente antes de que la petición llegue al Service.
-// =====================================================================
-
-// Para registrar una compra o una venta.
-// No incluyo TotalPrice: lo calcula la base, así nadie puede enviar un total falso.
+// Sin TotalPrice: lo calcula la base de datos.
 public record CreateTransactionRequest(
     [Range(1, int.MaxValue, ErrorMessage = "Debe seleccionar un producto válido.")]
     int ProductId,
@@ -26,11 +20,9 @@ public record CreateTransactionRequest(
     [MaxLength(500, ErrorMessage = "El detalle no puede superar 500 caracteres.")]
     string? Detail,
 
-    // Opcional: si no la envían, uso la fecha y hora actual.
     DateTime? TransactionDate);
 
-// Para editar. No tiene ProductId a propósito: el producto de una transacción
-// no se puede cambiar. Si se equivocaron de producto, se elimina y se crea otra.
+// Sin ProductId: el producto de una transacción no se puede cambiar.
 public record UpdateTransactionRequest(
     [EnumDataType(typeof(TransactionType), ErrorMessage = "El tipo debe ser Purchase o Sale.")]
     TransactionType Type,
@@ -44,18 +36,15 @@ public record UpdateTransactionRequest(
     [MaxLength(500, ErrorMessage = "El detalle no puede superar 500 caracteres.")]
     string? Detail,
 
-    // Opcional: si no la envían, conservo la fecha original.
     DateTime? TransactionDate);
 
-// Lo que devuelvo. Incluyo el nombre del producto (lo pido a Productos)
-// para que el frontend pueda mostrarlo en la tabla sin otra llamada.
 public record TransactionResponse(
     int Id,
     DateTime TransactionDate,
     TransactionType Type,
     int ProductId,
     string ProductName,
-    bool ProductIsActive,   // false si el producto fue eliminado: la fila queda de solo lectura
+    bool ProductIsActive,
     int Quantity,
     decimal UnitPrice,
     decimal TotalPrice,
@@ -63,8 +52,6 @@ public record TransactionResponse(
     DateTime CreatedAt,
     DateTime? UpdatedAt);
 
-// Historial de un producto: sus datos actuales (nombre y stock)
-//  más sus transacciones paginadas y filtradas.
 public record ProductHistoryResponse(
     int ProductId,
     string ProductName,

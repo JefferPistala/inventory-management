@@ -7,16 +7,9 @@ using Transactions.Api.Repositories;
 
 namespace Transactions.Api.Services;
 
-// Lógica de negocio de transacciones. Aqui esta la parte mas delicada del sistema
-// mantener el stock consistente entre DOS bases de datos de DOS servicios.
-//
-// No existe una transacción SQL que abarque ambas bases, así que uso una
-// Saga mínima con compensación:
-//   1. Pido a Productos que ajuste el stock (si no alcanza, responde 409 y corto aquí).
-//   2. Guardo el cambio en mi base.
-//   3. Si el paso 2 falla, compenso: aplico el delta inverso en Productos.
-// El paso que más probablemente falla (stock insuficiente) va primero,
-// así en el caso común no hay nada que deshacer.
+// Saga con compensación: no hay una transacción SQL que abarque las dos bases.
+// Primero ajusto el stock en Products.Api (el paso que más falla) y después guardo;
+// si el guardado falla, aplico el delta inverso.
 public class TransactionService(
     ITransactionRepository transactionRepository,
     IProductsApiClient productsClient,
@@ -43,11 +36,9 @@ public class TransactionService(
     {
         ValidateDateRange(query);
 
-        // Incluye productos eliminados: su historial se conserva y se puede consultar.
         ProductInfo product = await productsClient.GetProductAsync(productId)
             ?? throw new NotFoundException($"El producto {productId} no existe.");
 
-        // Fuerzo el filtro por producto: en el historial, el producto lo define la ruta.
         query.ProductId = productId;
         var (items, totalCount) = await transactionRepository.GetPagedAsync(query);
 
@@ -71,11 +62,8 @@ public class TransactionService(
     {
         DateTime transactionDate = ValidateTransactionDate(request.TransactionDate ?? DateTime.UtcNow);
 
-        // Al crear no hay transacción anterior: el delta es el efecto de la nueva.
         int delta = GetStockEffect(request.Type, request.Quantity);
 
-        // Paso 1: ajusto el stock. Si es una venta y no alcanza, Productos responde
-        // 409 y aquí se corta todo; no guardé nada, así que no hay nada que deshacer.
         await productsClient.AdjustStockAsync(request.ProductId, delta);
 
         var transaction = new Transaction
@@ -90,14 +78,12 @@ public class TransactionService(
 
         try
         {
-            // Paso 2: guardo la transacción en mi base.
             await transactionRepository.AddAsync(transaction);
         }
         catch
         {
-            // Paso 3: el guardado falló, así que devuelvo el stock como estaba.
             await CompensateStockAsync(request.ProductId, delta);
-            throw;   // relanzo: el usuario igual debe saber que la operación falló
+            throw;
         }
 
         return await GetByIdAsync(transaction.Id);
@@ -109,13 +95,11 @@ public class TransactionService(
 
         DateTime transactionDate = ValidateTransactionDate(request.TransactionDate ?? transaction.TransactionDate);
 
-        // delta = efecto(nueva) − efecto(antigua).
-        // Ejemplo: venta de 5 corregida a venta de 3 → (−3) − (−5) = +2 (vuelven 2 al stock).
+        // delta = efecto(nueva) - efecto(antigua)
         int delta = GetStockEffect(request.Type, request.Quantity)
                   - GetStockEffect(transaction.Type, transaction.Quantity);
 
-        // Si solo cambió el precio, el detalle o la fecha, el stock no se mueve
-        // y no llamo a Productos (además, Productos rechaza un ajuste de 0).
+        // Si el stock no cambia no llamo a Products.Api, que rechaza ajustes de 0.
         if (delta != 0)
             await productsClient.AdjustStockAsync(transaction.ProductId, delta);
 
@@ -144,9 +128,6 @@ public class TransactionService(
     {
         Transaction transaction = await GetExistingTransactionAsync(id);
 
-        // Eliminar es deshacer el efecto que tuvo: delta = −efecto.
-        // Eliminar una venta devuelve unidades; eliminar una compra las quita
-        // (y Productos lo rechaza si esas unidades ya se vendieron).
         int delta = -GetStockEffect(transaction.Type, transaction.Quantity);
 
         await productsClient.AdjustStockAsync(transaction.ProductId, delta);
@@ -162,19 +143,10 @@ public class TransactionService(
         }
     }
 
-    // ---------------------------------------------------------------
-    // Métodos de apoyo
-    // ---------------------------------------------------------------
-
-    // Único lugar donde se decide el signo: compra suma, venta resta.
-    // Así crear, editar y eliminar usan exactamente la misma regla.
     private static int GetStockEffect(TransactionType type, int quantity) =>
         type == TransactionType.Purchase ? quantity : -quantity;
 
-    // Compensación: aplico el delta inverso para dejar el stock como estaba.
-    // Si incluso esto falla (por ejemplo, Productos se cayó justo ahora), no
-    // puedo hacer más que registrarlo como crítico para revisarlo a mano.
-    // En un sistema grande esto se resolvería con reintentos y el patrón Outbox.
+    // Si la compensación también falla, solo queda registrarlo para revisión manual.
     private async Task CompensateStockAsync(int productId, int delta)
     {
         try
@@ -196,14 +168,11 @@ public class TransactionService(
         await transactionRepository.GetByIdAsync(id)
         ?? throw new NotFoundException($"La transacción {id} no existe.");
 
-    // Si no tengo los datos del producto (Productos no respondió), muestro
-    // "Producto no disponible" y no la marco como eliminada, porque no lo sé.
+    // Sin datos del producto no sé si fue eliminado, así que no lo marco como inactivo.
     private static TransactionResponse ToResponse(Transaction transaction, ProductInfo? product) =>
         transaction.ToResponse(product?.Name ?? UnavailableProductName, product?.IsActive ?? true);
 
-    // Pido los productos de la página en paralelo, una vez por producto
-    // distinto (no una por fila). Si Productos no responde, el listado
-    // igual se muestra con "Producto no disponible" en vez de fallar entero.
+    // Una llamada por producto distinto y en paralelo; si Products.Api no responde, el listado se muestra igual.
     private async Task<Dictionary<int, ProductInfo>> GetProductsAsync(IEnumerable<int> productIds)
     {
         List<int> distinctIds = productIds.Distinct().ToList();
@@ -227,10 +196,9 @@ public class TransactionService(
             throw new BusinessRuleException("La fecha inicial no puede ser mayor que la fecha final.");
     }
 
-    // Una transacción no puede registrarse en el futuro.
-    // Dejo un minuto de tolerancia por diferencias de reloj entre equipos.
     private static DateTime ValidateTransactionDate(DateTime date)
     {
+        // Un minuto de tolerancia por diferencias de reloj.
         if (date > DateTime.UtcNow.AddMinutes(1))
             throw new BusinessRuleException("La fecha de la transacción no puede ser futura.");
         return date;

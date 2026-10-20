@@ -1,9 +1,6 @@
 namespace Transactions.Api.Entities;
 
-// Tipos de transacción. Empiezo en 1 a propósito: si alguien no envía el tipo,
-// llega el valor por defecto 0, que no existe en el enum, y la validación lo
-// rechaza en lugar de asumir una compra.
-// En la base se guardan como 'PURCHASE' y 'SALE' (lo convierto en la configuración).
+// Empieza en 1: si el tipo no llega, el 0 no es válido y la validación lo rechaza.
 public enum TransactionType
 {
     Purchase = 1,

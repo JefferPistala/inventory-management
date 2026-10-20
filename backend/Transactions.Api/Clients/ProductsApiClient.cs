@@ -5,15 +5,11 @@ using Transactions.Api.Exceptions;
 
 namespace Transactions.Api.Clients;
 
-// Cliente HTTP tipado hacia Products.Api (comunicación síncrona por REST).
-// El HttpClient me lo entrega IHttpClientFactory (ver Program.cs) con la URL
-// base ya configurada; nunca hago "new HttpClient()" porque eso agota los sockets.
 public class ProductsApiClient(HttpClient httpClient) : IProductsApiClient
 {
     public async Task<ProductInfo?> GetProductAsync(int productId)
     {
-        // includeInactive=true: aunque el producto se haya eliminado, necesito su
-        // nombre para mostrar el historial; las transacciones nunca se pierden.
+        // includeInactive: el historial necesita el nombre aunque el producto esté eliminado.
         HttpResponseMessage response = await SendAsync(
             () => httpClient.GetAsync($"api/products/{productId}?includeInactive=true"));
 
@@ -35,8 +31,6 @@ public class ProductsApiClient(HttpClient httpClient) : IProductsApiClient
         if (response.IsSuccessStatusCode)
             return;
 
-        // Productos responde con ProblemDetails; reutilizo su "detail" para que
-        // el usuario reciba el mismo mensaje claro (por ejemplo, cuánto stock queda).
         string detail = await ReadProblemDetailAsync(response);
 
         throw response.StatusCode switch
@@ -49,8 +43,7 @@ public class ProductsApiClient(HttpClient httpClient) : IProductsApiClient
         };
     }
 
-    // Centralizo el manejo de fallas de red: si Productos está caído o no
-    // responde a tiempo, lo convierto en ExternalServiceException (→ 503).
+    // Una caída o un timeout de Products.Api se convierte en 503.
     private static async Task<HttpResponseMessage> SendAsync(Func<Task<HttpResponseMessage>> send)
     {
         try
@@ -73,7 +66,6 @@ public class ProductsApiClient(HttpClient httpClient) : IProductsApiClient
         }
         catch (JsonException)
         {
-            // Si la respuesta no es un ProblemDetails válido, uso un mensaje genérico.
             return fallback;
         }
     }
