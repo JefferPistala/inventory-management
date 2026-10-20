@@ -9,7 +9,7 @@ public class CategoryRepository(ProductsDbContext context) : ICategoryRepository
     public async Task<IReadOnlyList<Category>> GetAllAsync() =>
         await context.Categories
             .AsNoTracking()
-            .OrderBy(c => c.Name)   // orden explícito: nunca depender del orden "natural"
+            .OrderBy(c => c.Name)
             .ToListAsync();
 
     public Task<bool> ExistsAsync(int id) =>

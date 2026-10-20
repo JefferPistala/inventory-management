@@ -5,18 +5,14 @@ using Products.Api.Entities;
 
 namespace Products.Api.Repositories;
 
-// Implementación con EF Core. Aquí viven TODAS las consultas de productos.
 public class ProductRepository(ProductsDbContext context) : IProductRepository
 {
     public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(ProductQueryParameters query)
     {
-        // IQueryable: todavía NO se ejecuta nada; solo se arma la consulta.
-        // AsNoTracking: es solo lectura, EF no necesita vigilar cambios (más rápido).
         IQueryable<Product> products = context.Products
             .AsNoTracking()
             .Include(p => p.Category);
 
-        // Filtros dinámicos: cada uno se agrega SOLO si el usuario lo envió.
         if (!string.IsNullOrWhiteSpace(query.Name))
             products = products.Where(p => p.Name.Contains(query.Name.Trim()));
 
@@ -29,13 +25,8 @@ public class ProductRepository(ProductsDbContext context) : IProductRepository
         if (query.MaxPrice.HasValue)
             products = products.Where(p => p.Price <= query.MaxPrice.Value);
 
-        // El total se cuenta ANTES de paginar: es el total de resultados del filtro.
         int totalCount = await products.CountAsync();
-
-        // OrderBy es obligatorio antes de Skip/Take: sin orden, SQL Server no
-        // garantiza el orden y las páginas podrían repetir o saltarse filas.
-        // ThenBy(Id) desempata productos con el mismo nombre.
-        // Skip/Take se traducen a OFFSET/FETCH: solo viaja la página pedida.
+        // Sin un orden estable, la paginación con Skip/Take puede repetir u omitir filas.
         List<Product> items = await products
             .OrderBy(p => p.Name)
             .ThenBy(p => p.Id)
@@ -48,11 +39,8 @@ public class ProductRepository(ProductsDbContext context) : IProductRepository
 
     public Task<Product?> GetByIdAsync(int id, bool includeInactive = false)
     {
-        // Sin AsNoTracking: el Service puede modificar la entidad devuelta
-        // y luego llamar a SaveChangesAsync para guardar (editar / eliminar).
         IQueryable<Product> products = context.Products.Include(p => p.Category);
 
-        // IgnoreQueryFilters salta el filtro global IsActive solo en esta consulta.
         if (includeInactive)
             products = products.IgnoreQueryFilters();
 
@@ -72,11 +60,7 @@ public class ProductRepository(ProductsDbContext context) : IProductRepository
 
     public async Task<bool> TryAdjustStockAsync(int productId, int delta)
     {
-        // Un solo UPDATE con la condición en el WHERE:
-        //   UPDATE Products SET Stock = Stock + @delta, UpdatedAt = @now
-        //   WHERE Id = @id AND IsActive = 1 AND Stock + @delta >= 0
-        // La verificación y la resta ocurren en la MISMA sentencia, así que
-        // dos ventas simultáneas no pueden "colarse" entre ambas (sin carrera).
+        // Verifico y ajusto en un solo UPDATE para que dos ventas simultáneas no dejen el stock negativo.
         DateTime now = DateTime.UtcNow;
 
         int affectedRows = await context.Products

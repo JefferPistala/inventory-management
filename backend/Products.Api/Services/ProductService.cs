@@ -6,15 +6,12 @@ using Products.Api.Repositories;
 
 namespace Products.Api.Services;
 
-// Reglas de negocio de productos. Se lee como "qué debe pasar", sin detalles
-// de SQL (eso está en el Repository) ni de HTTP (eso está en el Controller).
 public class ProductService(
     IProductRepository productRepository,
     ICategoryRepository categoryRepository) : IProductService
 {
     public async Task<PagedResult<ProductResponse>> GetPagedAsync(ProductQueryParameters query)
     {
-        // Regla: un rango de precios invertido no tiene sentido.
         if (query.MinPrice > query.MaxPrice)
             throw new BusinessRuleException("El precio mínimo no puede ser mayor que el precio máximo.");
 
@@ -27,9 +24,7 @@ public class ProductService(
             totalCount);
     }
 
-    // includeInactive solo sirve para CONSULTAR un producto eliminado (por
-    // ejemplo, para mostrar su nombre en el historial). Editar, eliminar y
-    // ajustar stock siguen sin encontrarlo.
+    // includeInactive solo aplica a consultas; editar, eliminar y ajustar stock ignoran los eliminados.
     public async Task<ProductResponse> GetByIdAsync(int id, bool includeInactive = false)
     {
         Product product = await productRepository.GetByIdAsync(id, includeInactive)
@@ -41,8 +36,7 @@ public class ProductService(
     {
         await EnsureCategoryExistsAsync(request.CategoryId);
 
-        // Stock = 0: el inventario inicial se registra con una COMPRA,
-        // así toda unidad tiene una transacción que la explica.
+        // El inventario inicial se registra con una compra.
         var product = new Product
         {
             Name = request.Name.Trim(),
@@ -55,8 +49,6 @@ public class ProductService(
 
         await productRepository.AddAsync(product);
 
-        // Se vuelve a leer para traer la categoría (Include) y los valores
-        // que generó la base (Id, RowVersion).
         return await GetByIdAsync(product.Id);
     }
 
@@ -67,7 +59,6 @@ public class ProductService(
         if (product.CategoryId != request.CategoryId)
             await EnsureCategoryExistsAsync(request.CategoryId);
 
-        // El stock NO se toca aquí: solo cambia con transacciones.
         product.Name = request.Name.Trim();
         product.Description = request.Description?.Trim();
         product.CategoryId = request.CategoryId;
@@ -75,8 +66,7 @@ public class ProductService(
         product.Price = request.Price;
         product.UpdatedAt = DateTime.UtcNow;
 
-        // Si otro usuario editó el producto entre la lectura y este guardado,
-        // RowVersion no coincide y EF lanza DbUpdateConcurrencyException (→ 409).
+        // Si otro usuario lo modificó antes, RowVersion no coincide y EF lanza DbUpdateConcurrencyException (409).
         await productRepository.SaveChangesAsync();
 
         return await GetByIdAsync(id);
@@ -86,8 +76,6 @@ public class ProductService(
     {
         Product product = await GetExistingProductAsync(id);
 
-        // Soft delete: el historial de transacciones nunca queda huérfano.
-        // Desde aquí el filtro global lo oculta de todas las consultas.
         product.IsActive = false;
         product.UpdatedAt = DateTime.UtcNow;
 
@@ -103,18 +91,13 @@ public class ProductService(
 
         if (!updated)
         {
-            // El Repository solo dijo "0 filas". El Service interpreta POR QUÉ,
-            // para devolver el error correcto: 404 o 409.
-            Product product = await GetExistingProductAsync(id);   // lanza 404 si no existe
+            // El UPDATE no afectó filas: distingo si el producto no existe (404) o si no hay stock (409).
+            Product product = await GetExistingProductAsync(id);
             throw new InsufficientStockException(id, product.Stock, delta);
         }
 
         return await GetByIdAsync(id);
     }
-
-    // ---------------------------------------------------------------
-    // Métodos privados de apoyo: evitan repetir la misma validación.
-    // ---------------------------------------------------------------
 
     private async Task<Product> GetExistingProductAsync(int id) =>
         await productRepository.GetByIdAsync(id)

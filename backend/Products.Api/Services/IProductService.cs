@@ -2,8 +2,6 @@ using Products.Api.Dtos;
 
 namespace Products.Api.Services;
 
-// Contrato de la lógica de negocio de productos.
-// Recibe y devuelve DTOs: el Controller nunca ve las entidades.
 public interface IProductService
 {
     Task<PagedResult<ProductResponse>> GetPagedAsync(ProductQueryParameters query);

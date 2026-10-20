@@ -4,7 +4,6 @@ using Products.Api.Services;
 
 namespace Products.Api.Controllers;
 
-// Solo lectura: llena el <select> de categorías en el frontend.
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController(ICategoryService categoryService) : ControllerBase
