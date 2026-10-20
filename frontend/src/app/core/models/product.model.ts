@@ -1,4 +1,3 @@
-// Lo que devuelve Products.Api (ProductResponse).
 export interface Product {
   id: number;
   name: string;
@@ -13,7 +12,6 @@ export interface Product {
   updatedAt: string | null;
 }
 
-// Lo que envío al crear o editar. No incluye stock: solo cambia con transacciones.
 export interface ProductRequest {
   name: string;
   description: string | null;
@@ -22,7 +20,6 @@ export interface ProductRequest {
   price: number;
 }
 
-// Filtros dinámicos del listado; los que van vacíos no se envían.
 export interface ProductFilters {
   name?: string | null;
   categoryId?: number | null;

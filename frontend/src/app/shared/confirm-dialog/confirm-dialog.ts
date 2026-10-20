@@ -8,8 +8,6 @@ export interface ConfirmDialogData {
   confirmText?: string;
 }
 
-// Diálogo reutilizable para confirmar acciones destructivas (eliminar).
-// Devuelve true si el usuario confirma y false si cancela.
 @Component({
   selector: 'app-confirm-dialog',
   imports: [MatDialogModule, MatButtonModule],

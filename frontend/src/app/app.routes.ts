@@ -1,9 +1,6 @@
 import { Routes } from '@angular/router';
 
-// Cada pantalla se carga de forma diferida (loadComponent): el navegador
-// solo descarga el código de una vista cuando el usuario entra en ella.
-// Las rutas fijas ('products/new') van antes que las que tienen
-// parámetros ('products/:id') para que no se confundan.
+// Las rutas fijas van antes que las de parámetro para que 'new' no se tome como :id.
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'products' },
 
@@ -63,6 +60,5 @@ export const routes: Routes = [
       ),
   },
 
-  // Cualquier ruta desconocida vuelve al listado de productos.
   { path: '**', redirectTo: 'products' },
 ];

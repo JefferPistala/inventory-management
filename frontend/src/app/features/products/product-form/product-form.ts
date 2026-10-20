@@ -20,7 +20,6 @@ import {
   notBlankValidator,
 } from '../../../core/validators/form-validators';
 
-// Un solo componente para crear y editar: si la ruta trae :id, es edición.
 @Component({
   selector: 'app-product-form',
   imports: [
@@ -41,7 +40,6 @@ export class ProductForm implements OnInit {
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
 
-  // Viene del parámetro :id de la ruta (gracias a withComponentInputBinding).
   readonly id = input<string>();
 
   protected readonly isEdit = computed(() => !!this.id());
@@ -50,8 +48,6 @@ export class ProductForm implements OnInit {
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
 
-  // Validaciones de campos vacíos y de formato. Coinciden con las del DTO
-  // del backend, así el usuario ve el error antes de enviar.
   protected readonly form = inject(FormBuilder).nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150), notBlankValidator]],
     description: ['', Validators.maxLength(500)],
@@ -63,7 +59,6 @@ export class ProductForm implements OnInit {
     ],
   });
 
-  // Vista previa de la imagen mientras el usuario escribe la URL.
   private readonly imageUrl = toSignal(this.form.controls.imageUrl.valueChanges, { initialValue: '' });
   protected readonly failedPreviewUrl = signal<string | null>(null);
   protected readonly imagePreview = computed(() => {
@@ -80,7 +75,6 @@ export class ProductForm implements OnInit {
   }
 
   protected save(): void {
-    // Si hay errores, marco todo como tocado para que se vean los mensajes.
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -124,7 +118,6 @@ export class ProductForm implements OnInit {
             price: product.price,
           });
         },
-        // Si no existe (404), el interceptor avisa y regreso al listado.
         error: () => this.router.navigate(['/products']),
       });
   }

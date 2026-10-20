@@ -9,7 +9,6 @@ import { Product } from '../../../core/models/product.model';
 import { ProductService } from '../../../core/services/product.service';
 import { ApiDatePipe } from '../../../shared/pipes/api-date.pipe';
 
-// Consulta de solo lectura con toda la información de un producto.
 @Component({
   selector: 'app-product-detail',
   imports: [RouterLink, CurrencyPipe, DatePipe, ApiDatePipe, MatButtonModule, MatIconModule, MatProgressBarModule],

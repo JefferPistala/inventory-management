@@ -17,7 +17,6 @@
   </div>
 </header>
 
-<!-- El historial de un producto eliminado se conserva como consulta -->
 @if (!isActive()) {
   <div class="info-box">
     <mat-icon>info</mat-icon>
@@ -25,7 +24,6 @@
   </div>
 }
 
-<!-- Nombre y stock actual del producto -->
 <section class="summary-cards">
   <div class="summary-card">
     <div class="label">Producto</div>
@@ -46,7 +44,6 @@
   </div>
 </section>
 
-<!-- Filtros avanzados por tipo y rango de fechas -->
 <form class="panel filters" [formGroup]="filtersForm">
   <mat-form-field appearance="outline">
     <mat-label>Tipo de transacción</mat-label>

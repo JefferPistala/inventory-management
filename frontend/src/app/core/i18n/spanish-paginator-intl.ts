@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 
-// El paginador de Material viene en inglés. Sobrescribo sus textos para
-// que toda la aplicación quede en español (lo registro en app.config.ts).
 @Injectable()
 export class SpanishPaginatorIntl extends MatPaginatorIntl {
   override itemsPerPageLabel = 'Registros por página';

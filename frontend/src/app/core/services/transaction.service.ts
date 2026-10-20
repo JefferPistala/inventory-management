@@ -21,7 +21,6 @@ export class TransactionService {
     return this.http.get<PagedResult<Transaction>>(this.baseUrl, { params: toHttpParams(filters) });
   }
 
-  // El producto va en la ruta; el resto de filtros como query params.
   getHistory(productId: number, filters: TransactionFilters): Observable<ProductHistory> {
     return this.http.get<ProductHistory>(`${this.baseUrl}/history/${productId}`, {
       params: toHttpParams(filters),

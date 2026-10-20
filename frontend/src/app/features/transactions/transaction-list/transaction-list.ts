@@ -106,7 +106,6 @@ export class TransactionList {
       this.reload$.next();
     });
 
-    // Productos para el filtro por producto.
     this.productService.getAllForSelect().subscribe(products => this.products.set(products));
     this.reload$.next();
   }

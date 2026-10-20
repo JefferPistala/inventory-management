@@ -11,7 +11,6 @@
   </div>
 </header>
 
-<!-- Filtros dinámicos: cualquier cambio vuelve a consultar la API -->
 <form class="panel filters" [formGroup]="filtersForm">
   <mat-form-field appearance="outline">
     <mat-label>Buscar por nombre</mat-label>
@@ -59,7 +58,6 @@
   <p class="form-error">El precio mínimo no puede ser mayor que el precio máximo.</p>
 }
 
-<!-- Tabla dinámica con paginación del lado del servidor -->
 <div class="table-container">
   @if (loading()) {
     <mat-progress-bar mode="indeterminate" />

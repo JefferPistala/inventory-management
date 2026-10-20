@@ -9,7 +9,6 @@ export class CategoryService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = `${environment.productsApiUrl}/categories`;
 
-  // Catálogo fijo para llenar los selects de categoría.
   getAll(): Observable<Category[]> {
     return this.http.get<Category[]>(this.baseUrl);
   }

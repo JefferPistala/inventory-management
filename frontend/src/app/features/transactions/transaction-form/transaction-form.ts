@@ -33,8 +33,6 @@ import {
 } from '../../../core/validators/form-validators';
 import { ApiDatePipe } from '../../../shared/pipes/api-date.pipe';
 
-// Formulario para registrar y editar compras o ventas.
-// Aquí está la validación compleja: no permitir vender más stock del disponible.
 @Component({
   selector: 'app-transaction-form',
   imports: [
@@ -59,7 +57,6 @@ export class TransactionForm implements OnInit {
   private readonly notification = inject(NotificationService);
   private readonly router = inject(Router);
 
-  // :id de la ruta (edición) y ?productId= (producto preseleccionado al crear).
   readonly id = input<string>();
   readonly productId = input<string>();
 
@@ -84,8 +81,7 @@ export class TransactionForm implements OnInit {
     detail: ['', Validators.maxLength(500)],
   });
 
-  // Valor del formulario como signal, para calcular el total y el stock en vivo.
-  // Uso getRawValue porque en edición el producto está deshabilitado.
+  // getRawValue incluye el producto, que está deshabilitado al editar.
   private readonly formValue = toSignal(
     this.form.valueChanges.pipe(
       startWith(null),
@@ -94,9 +90,7 @@ export class TransactionForm implements OnInit {
     { requireSync: true },
   );
 
-  // Stock con el que cuenta esta transacción.
-  // Al editar, primero "devuelvo" el efecto de la transacción original:
-  // si era una venta de 5, esas 5 unidades vuelven a estar disponibles.
+  // Al editar, las unidades de la transacción original vuelven a contar como disponibles.
   protected readonly availableStock = computed(() => {
     const product = this.selectedProduct();
     if (!product) {
@@ -106,14 +100,12 @@ export class TransactionForm implements OnInit {
     return original ? product.stock - stockEffect(original.type, original.quantity) : product.stock;
   });
 
-  // Stock que quedaría después de guardar (misma fórmula del delta del backend).
   protected readonly resultingStock = computed(() => {
     const available = this.availableStock();
     const { type, quantity } = this.formValue();
     return available === null || !type || !quantity ? null : available + stockEffect(type, quantity);
   });
 
-  // Solo visual: el total real lo calcula la base de datos.
   protected readonly total = computed(() => {
     const { quantity, unitPrice } = this.formValue();
     return (quantity ?? 0) * (unitPrice ?? 0);
@@ -122,9 +114,7 @@ export class TransactionForm implements OnInit {
   constructor() {
     this.form.addValidators(this.stockValidator);
 
-    // Al elegir un producto (solo al crear), muestro su stock y sugiero su
-    // precio actual. El usuario puede cambiarlo: en una compra el costo
-    // al proveedor suele ser distinto del precio de venta.
+    // Precio sugerido pero editable: en una compra el costo suele ser distinto del precio de venta.
     this.form.controls.productId.valueChanges.pipe(takeUntilDestroyed()).subscribe(productId => {
       const product = this.products().find(p => p.id === productId) ?? null;
       this.selectedProduct.set(product);
@@ -175,13 +165,9 @@ export class TransactionForm implements OnInit {
       );
       this.router.navigate(['/transactions']);
     });
-    // Si el backend responde 409 (por ejemplo, otro usuario vendió antes),
-    // el interceptor muestra el mensaje y el usuario sigue en el formulario.
   }
 
-  // Validación compleja a nivel de formulario: el stock resultante no puede
-  // quedar negativo. Para una venta, significa no vender más de lo disponible.
-  // El backend vuelve a validarlo de forma atómica; esto es para avisar antes.
+  // El backend vuelve a validar el stock; esto solo avisa antes de enviar.
   private readonly stockValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
     const available = this.availableStock();
     const { type, quantity } = group.getRawValue();
@@ -198,7 +184,6 @@ export class TransactionForm implements OnInit {
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe(products => {
         this.products.set(products);
-        // Si llegué desde un producto (?productId=3), lo dejo seleccionado.
         const preselected = Number(this.productId());
         if (preselected && products.some(p => p.id === preselected)) {
           this.form.controls.productId.setValue(preselected);
@@ -220,9 +205,7 @@ export class TransactionForm implements OnInit {
             unitPrice: transaction.unitPrice,
             detail: transaction.detail ?? '',
           });
-          // El producto no se puede cambiar al editar.
           this.form.controls.productId.disable();
-          // Necesito el stock actual del producto para validar.
           return this.productService.getById(transaction.productId);
         }),
         finalize(() => this.loading.set(false)),

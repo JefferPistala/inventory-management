@@ -12,7 +12,6 @@
 }
 
 <form class="panel" [formGroup]="form" (ngSubmit)="save()">
-  <!-- El stock no se edita aquí: solo cambia con compras y ventas -->
   @if (isEdit() && product(); as current) {
     <div class="info-box">
       <mat-icon>inventory</mat-icon>

@@ -8,16 +8,13 @@ export const notBlankValidator: ValidatorFn = (control: AbstractControl): Valida
     : null;
 };
 
-// Máximo dos decimales (coincide con DECIMAL(18,2) de la base).
+// Igual que DECIMAL(18,2) en la base.
 export const TWO_DECIMALS_PATTERN = /^\d+(\.\d{1,2})?$/;
 
-// Solo enteros positivos para cantidades.
 export const INTEGER_PATTERN = /^\d+$/;
 
-// URL simple http o https para la imagen.
 export const URL_PATTERN = /^https?:\/\/\S+$/i;
 
-// Validador de grupo: el precio mínimo no puede superar al máximo.
 export function rangeValidator(minKey: string, maxKey: string): ValidatorFn {
   return (group: AbstractControl): ValidationErrors | null => {
     const min = group.get(minKey)?.value;

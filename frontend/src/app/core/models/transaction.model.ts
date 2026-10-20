@@ -1,6 +1,5 @@
 import { PagedResult } from './paged-result.model';
 
-// La API envía el tipo como texto gracias a JsonStringEnumConverter.
 export type TransactionType = 'Purchase' | 'Sale';
 
 export interface Transaction {
@@ -18,7 +17,6 @@ export interface Transaction {
   updatedAt: string | null;
 }
 
-// No envío el total: lo calcula la base de datos.
 export interface CreateTransactionRequest {
   productId: number;
   type: TransactionType;
@@ -27,7 +25,6 @@ export interface CreateTransactionRequest {
   detail: string | null;
 }
 
-// Sin productId: el producto de una transacción no se puede cambiar.
 export interface UpdateTransactionRequest {
   type: TransactionType;
   quantity: number;
@@ -44,7 +41,6 @@ export interface TransactionFilters {
   pageSize: number;
 }
 
-// Historial: datos actuales del producto + sus transacciones paginadas.
 export interface ProductHistory {
   productId: number;
   productName: string;
@@ -53,8 +49,7 @@ export interface ProductHistory {
   transactions: PagedResult<Transaction>;
 }
 
-// Único lugar del frontend donde decido el signo: compra suma, venta resta.
-// Es la misma regla que usa el backend (GetStockEffect).
+// Misma regla que GetStockEffect en el backend.
 export function stockEffect(type: TransactionType, quantity: number): number {
   return type === 'Purchase' ? quantity : -quantity;
 }

@@ -6,8 +6,6 @@ import { PagedResult } from '../models/paged-result.model';
 import { Product, ProductFilters, ProductRequest } from '../models/product.model';
 import { toHttpParams } from '../utils/http-params';
 
-// Un servicio por recurso, igual que un controller por recurso en el backend.
-// Aquí solo hago las llamadas HTTP; los errores los maneja el interceptor.
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private readonly http = inject(HttpClient);
@@ -17,7 +15,7 @@ export class ProductService {
     return this.http.get<PagedResult<Product>>(this.baseUrl, { params: toHttpParams(filters) });
   }
 
-  // Para los selects de producto uso la página máxima que permite la API (100).
+  // 100 es el pageSize máximo que acepta la API.
   getAllForSelect(): Observable<Product[]> {
     return this.getPaged({ page: 1, pageSize: 100 }).pipe(map(result => result.items));
   }

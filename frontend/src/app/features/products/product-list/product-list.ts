@@ -48,7 +48,6 @@ export class ProductList {
 
   protected readonly displayedColumns = ['image', 'name', 'category', 'price', 'stock', 'actions'];
 
-  // Estado de la pantalla con signals: la vista se actualiza sola cuando cambian.
   protected readonly products = signal<Product[]>([]);
   protected readonly categories = signal<Category[]>([]);
   protected readonly totalCount = signal(0);
@@ -66,9 +65,7 @@ export class ProductList {
     { validators: rangeValidator('minPrice', 'maxPrice') },
   );
 
-  // Cada vez que emito aquí se recarga la tabla. Uso switchMap para que,
-  // si llega una búsqueda nueva antes de que termine la anterior, la
-  // anterior se cancele y no pise los resultados más recientes.
+  // switchMap cancela la búsqueda anterior si llega una nueva.
   private readonly reload$ = new Subject<void>();
 
   constructor() {
@@ -76,7 +73,6 @@ export class ProductList {
       .pipe(
         tap(() => this.loading.set(true)),
         switchMap(() =>
-          // Si falla, el interceptor ya mostró el mensaje; aquí solo sigo vivo.
           this.productService.getPaged(this.buildFilters()).pipe(catchError(() => of(null))),
         ),
         takeUntilDestroyed(),
@@ -89,8 +85,6 @@ export class ProductList {
         }
       });
 
-    // Filtros dinámicos: espero 400 ms después de que el usuario deja de
-    // escribir para no hacer una petición por cada tecla.
     this.filtersForm.valueChanges
       .pipe(
         debounceTime(400),
@@ -98,7 +92,7 @@ export class ProductList {
         takeUntilDestroyed(),
       )
       .subscribe(() => {
-        this.pageIndex.set(0); // con filtros nuevos vuelvo a la primera página
+        this.pageIndex.set(0);
         this.reload$.next();
       });
 
@@ -140,7 +134,6 @@ export class ProductList {
       });
   }
 
-  // Ids de productos cuya imagen no cargó: en su lugar muestro un ícono.
   protected readonly brokenImages = signal(new Set<number>());
 
   protected onImageError(productId: number): void {

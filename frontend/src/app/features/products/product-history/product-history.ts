@@ -27,8 +27,6 @@ import { ConfirmDialog, ConfirmDialogData } from '../../../shared/confirm-dialog
 import { ApiDatePipe } from '../../../shared/pipes/api-date.pipe';
 import { TransactionTypePipe } from '../../../shared/pipes/transaction-type.pipe';
 
-// Historial de un producto: muestra su nombre y stock actual, y sus
-// transacciones con filtros por tipo y rango de fechas.
 @Component({
   selector: 'app-product-history',
   imports: [
@@ -92,7 +90,6 @@ export class ProductHistory implements OnInit {
       .subscribe(history => {
         this.loading.set(false);
         if (!history) {
-          // El producto no existe o fue eliminado: regreso al listado.
           this.router.navigate(['/products']);
           return;
         }
@@ -109,7 +106,6 @@ export class ProductHistory implements OnInit {
     });
   }
 
-  // El id llega como input de la ruta, por eso hago la primera carga aquí.
   ngOnInit(): void {
     this.reload$.next();
   }

@@ -1,4 +1,3 @@
-// Tema de Angular Material (Material 3). Lo generó "ng add @angular/material".
 @use '@angular/material' as mat;
 
 html {
@@ -24,16 +23,8 @@ body {
   height: 100%;
 }
 
-// ---------------------------------------------------------------
-// Estilos compartidos. Los dejo aquí (y no en cada componente)
-// porque todas las pantallas usan la misma estructura: encabezado,
-// filtros, tabla y formularios.
-// ---------------------------------------------------------------
-
-// Barra superior
-// Material 3 pinta sus componentes con variables (tokens); por eso cambio
-// los colores redefiniendo esas variables y no con background-color.
 .app-toolbar {
+  // Material 3 usa tokens: los colores se cambian redefiniendo sus variables.
   --mat-toolbar-container-background-color: var(--mat-sys-primary);
   --mat-toolbar-container-text-color: var(--mat-sys-on-primary);
   position: sticky;
@@ -68,7 +59,6 @@ body {
   padding: 24px 16px 48px;
 }
 
-// Encabezado de cada pantalla
 .page-header {
   display: flex;
   flex-wrap: wrap;
@@ -94,7 +84,6 @@ body {
   }
 }
 
-// Tarjeta blanca que envuelve filtros, tablas y formularios
 .panel {
   background-color: var(--mat-sys-surface);
   border-radius: 12px;
@@ -103,7 +92,6 @@ body {
   box-shadow: var(--mat-sys-level1);
 }
 
-// Filtros dinámicos
 .filters {
   display: flex;
   flex-wrap: wrap;
@@ -121,7 +109,6 @@ body {
   }
 }
 
-// Tablas
 .table-container {
   overflow-x: auto;
   border-radius: 12px;
@@ -153,7 +140,6 @@ body {
   font: var(--mat-sys-body-small);
 }
 
-// Miniatura de producto
 .thumbnail {
   width: 44px;
   height: 44px;
@@ -166,7 +152,6 @@ body {
   color: var(--mat-sys-outline);
 }
 
-// Etiquetas de estado (stock y tipo de transacción)
 .badge {
   display: inline-block;
   padding: 2px 10px;
@@ -196,7 +181,6 @@ body {
   }
 }
 
-// Formularios
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -220,7 +204,6 @@ body {
   margin: 0 0 8px;
 }
 
-// Mensajes informativos dentro de formularios
 .info-box {
   display: flex;
   align-items: center;
@@ -243,7 +226,6 @@ body {
   object-fit: cover;
 }
 
-// Detalle de producto
 .detail-layout {
   display: grid;
   grid-template-columns: 240px 1fr;
@@ -277,7 +259,6 @@ body {
   }
 }
 
-// Resumen del historial (nombre y stock del producto)
 .summary-cards {
   display: flex;
   flex-wrap: wrap;
@@ -303,13 +284,11 @@ body {
   }
 }
 
-// Botón rojo para confirmar eliminaciones
 .danger-button {
   --mat-button-filled-container-color: var(--mat-sys-error);
   --mat-button-filled-label-text-color: var(--mat-sys-on-error);
 }
 
-// Notificaciones de éxito y error (NotificationService)
 .snackbar-success {
   --mat-snack-bar-container-color: #1b5e20;
   --mat-snack-bar-supporting-text-color: #ffffff;

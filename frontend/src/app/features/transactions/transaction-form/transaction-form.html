@@ -20,7 +20,6 @@
   }
 
   <div class="form-grid">
-    <!-- Al editar, el producto se muestra pero no se puede cambiar -->
     @if (isEdit()) {
             <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Producto</mat-label>
@@ -91,7 +90,6 @@
     </mat-form-field>
   </div>
 
-  <!-- Resumen en vivo: stock disponible, stock resultante y total -->
   @if (availableStock() !== null) {
     <div class="summary-cards">
       <div class="summary-card">
@@ -109,7 +107,6 @@
     </div>
   }
 
-  <!-- Validación compleja: no vender más de lo disponible -->
   @if (form.hasError('insufficientStock')) {
     <div class="info-box error">
       <mat-icon>error</mat-icon>
